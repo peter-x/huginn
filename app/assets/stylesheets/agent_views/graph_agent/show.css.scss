@@ -1,0 +1,27 @@
+.show-view.graph-agent {
+  .rickshaw_annotation_timeline {
+    left: 40px;
+    width: 700px;
+  }
+
+  .chart-container {
+    position: relative;
+    font-family: Arial, Helvetica, sans-serif;
+    display: inline-block;
+
+    .chart {
+      position: relative;
+      display: inline-block;
+      left: 40px;
+      overflow: hidden;
+      width: 700px;
+    }
+
+    .y-axis {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 40px;
+    }
+  }
+}

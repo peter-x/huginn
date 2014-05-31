@@ -1,0 +1,43 @@
+<% content_for :head do %>
+  <%= javascript_include_tag "graphing" %>
+<% end %>
+
+<% @agent.data.each_with_index do |(seriesName, values), index| %>
+<h3><%= seriesName %></h3>
+<div class="chart-container group-<%= index.to_s %>">
+  <div class="y-axis"></div>
+  <div class="chart"></div>
+</div>
+
+<script>
+  $(function() {
+    var $chart = $(".chart-container.group-<%= index.to_s %>").last();
+    var minValue = <%= values.map do |x, y| y end.min %>;
+    var maxValue = <%= values.map do |x, y| y end.max %>;
+    var scale = d3.scale.linear().domain([minValue, maxValue]).nice();
+    var graph = new Rickshaw.Graph({
+            element: $chart.find(".chart").get(0),
+            width: 700,
+            height: 240,
+            renderer: 'line',
+            series: [{
+                data: [<%= values.map do |x, y| "{x:#{x},y:#{y}}" end.join "," %>],
+                name: <%= Utils.jsonify seriesName %>,
+                color: 'steelblue',
+                scale: scale
+            }]
+    });
+    var x_axis = new Rickshaw.Graph.Axis.Time({ graph: graph });
+    var y_axis = new Rickshaw.Graph.Axis.Y.Scaled({
+            graph: graph,
+            orientation: 'left',
+            tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+            scale: scale,
+            element: $chart.find(".y-axis").get(0),
+    });
+    var detail = new Rickshaw.Graph.HoverDetail({ graph: graph });
+    graph.render()
+  });
+</script>
+<% end %>
+
