@@ -1,9 +1,12 @@
+require 'date'
+
 module Agents
   class GraphAgent < Agent
     cannot_be_scheduled!
 
     description <<-MD
       Pipe events into the GraphAgent and visualize in a graph.
+      If `time_path` is not given or not present in the event payload, use the event creation date.
     MD
 
     def validate_options
@@ -15,6 +18,7 @@ module Agents
         'expected_receive_period_in_days' => "2",
         'group_by_path' => "series",
         'value_path' => "value",
+        'time_path' => "",
       }
     end
 
@@ -24,10 +28,18 @@ module Agents
 
     def data
       series = {}
-      received_events.pluck(:created_at, :payload).each do |t, pl|
-          series_name = Utils.value_at(pl, options['group_by_path'])
+      received_events.pluck(:created_at, :payload).each do |created, payload|
+          series_name = Utils.value_at(payload, options['group_by_path'])
+          time = created.to_time.to_i
+          if options['time_path']
+             explicit_time = Utils.value_at(payload, options['time_path'])
+             begin
+                time = DateTime.parse(explicit_time).to_time.to_i
+             rescue ArgumentError, TypeError
+             end
+          end
           series[series_name] ||= []
-          series[series_name] << [t.to_i, Utils.value_at(pl, options['value_path']).to_f]
+          series[series_name] << [time, Utils.value_at(payload, options['value_path']).to_f]
       end
       series.each do |name, values|
           values.sort!
